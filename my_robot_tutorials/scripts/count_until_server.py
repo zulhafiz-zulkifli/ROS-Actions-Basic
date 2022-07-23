@@ -24,15 +24,39 @@ class CountUntilServer:
 		self._counter = 0
 		rate = rospy.Rate(1.0/wait_duration)
 
-		while self._counter < max_number:
+		success = False
+		preempted = False
+
+		while not rospy.is_shutdown():
 			self._counter += 1
+			if self._as.is_preempt_requested(): #condition for preempted
+				preempted = True
+				break
+			if self._counter > 9: #condition for aborted
+				success = False
+				break
+			if self._counter >= max_number: #condition for succeeded
+				success = True
+				break
 			rospy.loginfo(self._counter)
+			feedback = CountUntilFeedback()
+			feedback.percentage = float(self._counter)/float(max_number)
+			self._as.publish_feedback(feedback)
 			rate.sleep()
 
 		result = CountUntilResult()
 		result.count = self._counter
-		self._as.set_succeeded(result)
-		rospy.loginfo("Succeeded! Send goal result to client")
+		rospy.loginfo("Finished. Sending goal result to client")
+		if preempted:
+			rospy.loginfo("PREEMPTED")
+			self._as.set_preempted(result)
+		elif success:
+			rospy.loginfo("SUCCESS")
+			self._as.set_succeeded(result)
+		else:
+			rospy.loginfo("FAILURE")
+			self._as.set_aborted(result)
+		
 
 if __name__ == '__main__':
 	rospy.init_node('count_until_server')
