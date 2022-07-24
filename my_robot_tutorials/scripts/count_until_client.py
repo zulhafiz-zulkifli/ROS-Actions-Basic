@@ -16,7 +16,7 @@ class CountUntilClient:
 		goal = CountUntilGoal(max_number=5, wait_duration=1.0)
 		self._ac.send_goal(goal, done_cb=self.done_callback, feedback_cb=self.feedback_callback)
 		rospy.loginfo("Goal has been sent.")
-		#self._ac.wait_for_result()
+		#self._ac.wait_for_result() #wait for result, blocking call
 		#rospy.loginfo(self._ac.get_result())
 		rospy.loginfo("Doing something else while waiting...")
 		# rospy.sleep(3)
